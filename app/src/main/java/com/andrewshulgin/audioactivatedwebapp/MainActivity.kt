@@ -44,6 +44,8 @@ class MainActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        WebView.setWebContentsDebuggingEnabled(true)
+
         sharedPref = getSharedPreferences(
             getString(R.string.preference_file_key), MODE_PRIVATE
         )
