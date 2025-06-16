@@ -40,6 +40,34 @@ class MainActivity : Activity() {
         Intent(applicationContext, AudioService::class.java)
     }
 
+    private fun checkPermissionsAndStartForegroundService() {
+        if (ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.RECORD_AUDIO
+            ) != PermissionChecker.PERMISSION_GRANTED
+        ) {
+            ActivityCompat.requestPermissions(
+                this,
+                arrayOf(Manifest.permission.RECORD_AUDIO),
+                AUDIO_PERMISSION_REQUEST_CODE
+            )
+        } else if (
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+            ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.POST_NOTIFICATIONS
+            ) != PermissionChecker.PERMISSION_GRANTED
+        ) {
+            ActivityCompat.requestPermissions(
+                this,
+                arrayOf(Manifest.permission.POST_NOTIFICATIONS),
+                NOTIFICATION_PERMISSION_REQUEST_CODE
+            )
+        } else {
+            ContextCompat.startForegroundService(this@MainActivity, serviceIntent)
+        }
+    }
+
     @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -88,33 +116,8 @@ class MainActivity : Activity() {
         requestWindowFeature(Window.FEATURE_NO_TITLE)
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            if (ContextCompat.checkSelfPermission(
-                    this,
-                    Manifest.permission.POST_NOTIFICATIONS
-                ) != PermissionChecker.PERMISSION_GRANTED
-            ) {
-                ActivityCompat.requestPermissions(
-                    this,
-                    arrayOf(Manifest.permission.POST_NOTIFICATIONS),
-                    NOTIFICATION_PERMISSION_REQUEST_CODE
-                )
-            }
-        }
+        checkPermissionsAndStartForegroundService()
 
-        if (ContextCompat.checkSelfPermission(
-                this,
-                Manifest.permission.RECORD_AUDIO
-            ) != PermissionChecker.PERMISSION_GRANTED
-        ) {
-            ActivityCompat.requestPermissions(
-                this,
-                arrayOf(Manifest.permission.RECORD_AUDIO),
-                AUDIO_PERMISSION_REQUEST_CODE
-            )
-        } else {
-            ContextCompat.startForegroundService(this@MainActivity, serviceIntent)
-        }
         val url = sharedPref!!.getString("url", "about:blank")
         val frameLayout = FrameLayout(this).apply {
             layoutParams = FrameLayout.LayoutParams(
@@ -199,5 +202,16 @@ class MainActivity : Activity() {
     override fun onResume() {
         super.onResume()
         initialize()
+    }
+
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
+        if (
+            requestCode in intArrayOf(
+                NOTIFICATION_PERMISSION_REQUEST_CODE,
+                AUDIO_PERMISSION_REQUEST_CODE
+            ) && grantResults.isNotEmpty()
+        ) {
+            checkPermissionsAndStartForegroundService()
+        }
     }
 }
