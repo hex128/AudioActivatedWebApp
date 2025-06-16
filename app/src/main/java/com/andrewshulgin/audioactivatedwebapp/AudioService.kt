@@ -12,7 +12,6 @@ import android.media.AudioRecord
 import android.media.MediaRecorder
 import android.os.Build
 import android.os.IBinder
-import android.os.PowerManager
 import android.support.v4.app.NotificationCompat
 import android.util.Log
 import java.util.concurrent.atomic.AtomicBoolean
@@ -46,14 +45,6 @@ class AudioService : Service() {
             }
             "debug_rms" -> {
                 debugRms = prefs.getBoolean(key, false)
-            }
-            "url" -> {
-                val url = prefs.getString(key, "about:blank")
-                // TODO
-            }
-            "wake_timeout" -> {
-                val wakeTimeout = prefs.getLong(key, 10)
-                // TODO
             }
         }
     }
@@ -107,13 +98,6 @@ class AudioService : Service() {
                             )
                         }
                         if ((wakeRms in 0 until rms) || (wakePeak in 0 until peak)) {
-                            val powerManager =
-                                applicationContext.getSystemService(POWER_SERVICE) as PowerManager
-                            val wakeLock = powerManager.newWakeLock(
-                                PowerManager.SCREEN_BRIGHT_WAKE_LOCK or PowerManager.ACQUIRE_CAUSES_WAKEUP,
-                                "AudioActivatedWebApp::PreLaunchWakeLock"
-                            )
-                            wakeLock.acquire(1000)
                             val newIntent = Intent(applicationContext, MainActivity::class.java)
                             newIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                             applicationContext.startActivity(newIntent)
